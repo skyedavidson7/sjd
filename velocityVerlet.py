@@ -31,10 +31,22 @@ def force_lj(v1, v2):
         force = 0
 
     else:
-        force = 48*((1/r_mod**14)-(1/(2*r_mod**8)))*r
+        force_lj = 48*((1/r_mod**14)-(1/(2*r_mod**8)))*r
 
     
-    return force
+    return force_lj
+
+def forces_list(self, i, j):
+    """
+    Method to create a list for the total forces on each particle
+    """
+        forces_list = np.zeros((N,3))
+
+        for i in range(N):
+            for j in range(i+1,N):
+                force_ij = force_lj([vi],[vj])
+                forces_list[i] += force_ij
+                forces_list[j] -= force_ij
 
 
 def pot_energy_mp(v1, v2, sigma):
