@@ -26,8 +26,9 @@ def force_lj(v1, v2):
     r_12mod = np.linalg.norm(r_12)
     r_mod = r_12mod/sigma
     r = r_12/sigma
+    cutoff = input("Cutoff distance is":)
 
-    if r_mod > 2.5:
+    if r_mod > cutoff:
         force = 0
 
     else:
