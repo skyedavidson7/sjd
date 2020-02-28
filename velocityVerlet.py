@@ -49,6 +49,15 @@ def forces_list(self, i, j):
                 forces_list[i] += force_ij
                 forces_list[j] -= force_ij
 
+def separation_list(self, r1, r2):
+    "Method to create a list for the particle separations"
+
+        separation_list = np.zeros(())
+
+        for i in range(N):
+            for j in range(i+1,N):
+                separation_ij = Particle3D.vector_sep([vi],[vj])
+                separation_list[i] += separation_ij
 
 def pot_energy_mp(v1, v2, sigma):
     """
