@@ -70,7 +70,7 @@ def pot_energy_mp(v1, v2, sigma):
     r = r_12/sigma
 
 
-    if r_mod > 2.5:
+    if r_mod > cutoff:
         potential = 0
 
     else:
