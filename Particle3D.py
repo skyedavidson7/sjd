@@ -1,19 +1,18 @@
 """
-Exercise2: Particle3D, a class to describe 3D particles
-
-Skye Davidson
-s1787851
+ CMod Ex2: Particle3D, a class to describe 3D particles
 """
-import math
+import typing
+
 import numpy as np
+
 
 class Particle3D(object):
     """
     Class to describe 3D particles.
 
     Properties:
-    position(numpy array) - 3D position vector
-    velocity(numpy array) - 3D velocity vector
+    position(float) - position of particle
+    velocity(float) - velocity of particle
     mass(float) - particle mass
 
     Methods:
@@ -23,85 +22,118 @@ class Particle3D(object):
     * first- and second order position updates
     """
 
-    def __init__(self, label, x_pos, y_pos, z_pos, x_vel, y_vel, z_vel, mass):
+    def __init__(self, label: str, mass: float, pos: np.ndarray, vel: np.ndarray):
         """
         Initialise a Particle3D instance
-       
+
+        :param label: label for particle
+        :param pos: position as array of float [x, y, z]
+        :param vel: velocity as array of float [x, y, z]
+        :param mass: mass as float
         """
-       
-        self.label = str(label)
-        self.position = np.array([x_pos, y_pos, z_pos])
-        self.velocity = np.array([x_vel, y_vel, z_vel])
+        self.label = label
+        self.position = pos
+        self.velocity = vel
         self.mass = mass
-    
 
     def __str__(self):
         """
         Define output format.
+        Prints the particle in an XYZ-compatible format
+        <label > <x-pos > <y-pos > <z-pos >
         """
-        return "label =" + label
-        return " x-pos =" + str(self.x_pos) + ", y-pos =" + str(self.y_pos) + ", z-pos =" + str(z_pos)
+        return self.label + " " + str(self.position[0]) + " " + str(self.position[1]) + " " + str(self.position[2])
 
-        return  "m = " + str(self.mass)
-
-    
     def kinetic_energy(self):
         """
         Return kinetic energy as
         1/2*mass*vel^2
         """
-        return (0.5)*(self.mass)*((np.linalg.norm(self.velocity))**2)
-        
+        velocity = np.linalg.norm(self.velocity)
+        return 0.5 * self.mass * velocity ** 2
 
     # Time integration methods
-    def leap_velocity(self, dt, force):
+    def leap_velocity(self, dt: float, force: np.ndarray):
         """
         First-order velocity update,
-        v(t+dt) = v(t) + dt*F(t)/m
+        v(t+dt) = v(t) + dt*F(t)
+
+        :param dt: timestep as float
+        :param force: force on particle as array of float (x,y,z)
         """
-        self.velocity += dt*force/self.mass
+        self.velocity[0] += dt * force[0] / self.mass
+        self.velocity[1] += dt * force[1] / self.mass
+        self.velocity[2] += dt * force[2] / self.mass
 
-
-    def leap_pos1st(self, dt):
+    def leap_pos1st(self, dt: float):
         """
         First-order position update,
-        r(t+dt) = r(t) + dt*v(t)
-        """
-        self.position += dt*self.velocity
+        x(t+dt) = x(t) + dt*v(t)
 
+        :param dt: timestep as float
+        """
+        self.position[0] += dt * self.velocity[0]
+        self.position[1] += dt * self.velocity[1]
+        self.position[2] += dt * self.velocity[2]
 
     def leap_pos2nd(self, dt, force):
         """
         Second-order position update,
-        r(t+dt) = r(t) + dt*v(t) + 1/2*dt^2*F(t)/m
+        x(t+dt) = x(t) + dt*v(t) + 1/2*dt^2*F(t)
+
+        :param dt: timestep as float
+        :param force: current force as array of float (x,y,z)
         """
-        self.position += dt*self.velocity + 0.5*dt**2*force/self.mass
+        self.position[0] += dt * self.velocity[0] + 0.5 * dt ** 2 * force[0] / self.mass
+        self.position[1] += dt * self.velocity[1] + 0.5 * dt ** 2 * force[1] / self.mass
+        self.position[2] += dt * self.velocity[2] + 0.5 * dt ** 2 * force[2] / self.mass
 
     @staticmethod
-    def file_input(file_handle):
+    def create_from_file(fp: typing.TextIO):
         """
-        To assign appropriate properties after reading in from a file
-        """
-        #read in data as list of strings and then close file
-        input_data = file_handle.readline()
-        token = input_data.split(" ")
-        label = str(token[0])
-        x_pos = float(token[1])
-        y_pos = float(token[2])
-        z_pos = float(token[3])
-        x_vel = float(token[4])
-        y_vel = float(token[5])
-        z_vel = float(token[6])
-        mass = float(token[7])
-        
-        return Particle3D(label, x_pos, y_pos, z_pos, x_vel, y_vel, z_vel, mass)
-       
-        
-    @staticmethod
-    def vector_sep(v1, v2):
-        """
-        Calculate the vector separation between two 3D particles
-        """
-        return (v2 - v1)
-            
+        Static method to return a new Particle3D instance from a file.
+        File format is comma delimited in following order
 
+        1. label
+        2. mass
+        3. vel_x
+        4. vel_y
+        5. vel_z
+        6. pos_x
+        7. pos_y
+        8. pos_z
+
+        :param fp: File pointer for import file
+        """
+        # Read a line from file and split on comma
+        line = fp.readline()
+        split_line = line.split(",")
+
+        # Throw error if invalid
+        if len(split_line) != 8:
+            raise Exception("Invalid file input, requires 8 fields delimited by commas")
+
+        # Pull out fields from list
+        label = split_line[0]
+        mass = float(split_line[1])
+        vel_x = float(split_line[2])
+        vel_y = float(split_line[3])
+        vel_z = float(split_line[4])
+        pos_x = float(split_line[5])
+        pos_y = float(split_line[6])
+        pos_z = float(split_line[7])
+        vel = np.array([vel_x, vel_y, vel_z])
+        pos = np.array([pos_x, pos_y, pos_z])
+
+        # Return new object
+        return Particle3D(label, mass, pos, vel)
+
+    @staticmethod
+    def relative_vector_separation(p1, p2):
+        """
+        Calculates the distance between 2 given particles
+
+        :type p1: Particle3D
+        :type p2: Particle3D
+        """
+        return np.linalg.norm(p1.position - p2.position)
