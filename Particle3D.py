@@ -1,18 +1,19 @@
 """
- CMod Ex2: Particle3D, a class to describe 3D particles
+Exercise2: Particle3D, a class to describe 3D particles
+
+Skye Davidson
+s1787851
 """
-import typing
-
+import math
 import numpy as np
-
 
 class Particle3D(object):
     """
     Class to describe 3D particles.
 
     Properties:
-    position(float) - position of particle
-    velocity(float) - velocity of particle
+    position(numpy array) - 3D position vector
+    velocity(numpy array) - 3D velocity vector
     mass(float) - particle mass
 
     Methods:
@@ -22,118 +23,103 @@ class Particle3D(object):
     * first- and second order position updates
     """
 
-    def __init__(self, label: str, mass: float, pos: np.ndarray, vel: np.ndarray):
+    def __init__(self, label, x_pos, y_pos, z_pos, x_vel, y_vel, z_vel, mass):
         """
         Initialise a Particle3D instance
-
-        :param label: label for particle
-        :param pos: position as array of float [x, y, z]
-        :param vel: velocity as array of float [x, y, z]
-        :param mass: mass as float
+       
         """
-        self.label = label
-        self.position = pos
-        self.velocity = vel
+       
+        self.label = str(label)
+        self.position = np.array([x_pos, y_pos, z_pos],float)
+        self.velocity = np.array([x_vel, y_vel, z_vel],float)
         self.mass = mass
+    
 
     def __str__(self):
         """
         Define output format.
-        Prints the particle in an XYZ-compatible format
-        <label > <x-pos > <y-pos > <z-pos >
         """
-        return self.label + " " + str(self.position[0]) + " " + str(self.position[1]) + " " + str(self.position[2])
+        xyz_str = "{0:8s} {1:12.8f}, {2:12.8f} {3:12.8f}".format(label, self.position[0], self.position[1], self.position[2])
+        return xyz_str
+        """return " x-pos =" + str(self.x_pos) + ", y-pos =" + str(self.y_pos) + ", z-pos =" + str(z_pos)
 
+        return  "m = " + str(self.mass)"""
+
+    
     def kinetic_energy(self):
         """
         Return kinetic energy as
         1/2*mass*vel^2
         """
-        velocity = np.linalg.norm(self.velocity)
-        return 0.5 * self.mass * velocity ** 2
+        return (0.5)*(self.mass)*np.dot(self.velocity,self.velocity)
+
+    
+    @staticmethod
+    def kinetic_energy_list(particle_list)          """particle_list defined in main of vv"""
+        ke = 0.0
+        for particle in particle_list:
+            ke += particle.kinetic_energy()
+        return ke
+        
 
     # Time integration methods
-    def leap_velocity(self, dt: float, force: np.ndarray):
+    def leap_vel(self, dt, force):
         """
         First-order velocity update,
-        v(t+dt) = v(t) + dt*F(t)
-
-        :param dt: timestep as float
-        :param force: force on particle as array of float (x,y,z)
+        v(t+dt) = v(t) + dt*F(t)/m
         """
-        self.velocity[0] += dt * force[0] / self.mass
-        self.velocity[1] += dt * force[1] / self.mass
-        self.velocity[2] += dt * force[2] / self.mass
+        self.velocity += dt*force/self.mass
 
-    def leap_pos1st(self, dt: float):
+
+    def leap_pos1st(self, dt):
         """
         First-order position update,
-        x(t+dt) = x(t) + dt*v(t)
-
-        :param dt: timestep as float
+        r(t+dt) = r(t) + dt*v(t)
         """
-        self.position[0] += dt * self.velocity[0]
-        self.position[1] += dt * self.velocity[1]
-        self.position[2] += dt * self.velocity[2]
+        self.position += dt*self.velocity
+
 
     def leap_pos2nd(self, dt, force):
         """
         Second-order position update,
-        x(t+dt) = x(t) + dt*v(t) + 1/2*dt^2*F(t)
-
-        :param dt: timestep as float
-        :param force: current force as array of float (x,y,z)
+        r(t+dt) = r(t) + dt*v(t) + 1/2*dt^2*F(t)/m
         """
-        self.position[0] += dt * self.velocity[0] + 0.5 * dt ** 2 * force[0] / self.mass
-        self.position[1] += dt * self.velocity[1] + 0.5 * dt ** 2 * force[1] / self.mass
-        self.position[2] += dt * self.velocity[2] + 0.5 * dt ** 2 * force[2] / self.mass
+        self.position += dt*self.velocity + 0.5*dt**2*force/self.mass
+
+    
+    @staticmethod
+    def leap_vel_list(particle_list, dt, forces):
+        """ 
+        Assume forces[i] is the force on particle_list[i]
+        """
 
     @staticmethod
-    def create_from_file(fp: typing.TextIO):
-        """
-        Static method to return a new Particle3D instance from a file.
-        File format is comma delimited in following order
-
-        1. label
-        2. mass
-        3. vel_x
-        4. vel_y
-        5. vel_z
-        6. pos_x
-        7. pos_y
-        8. pos_z
-
-        :param fp: File pointer for import file
-        """
-        # Read a line from file and split on comma
-        line = fp.readline()
-        split_line = line.split(",")
-
-        # Throw error if invalid
-        if len(split_line) != 8:
-            raise Exception("Invalid file input, requires 8 fields delimited by commas")
-
-        # Pull out fields from list
-        label = split_line[0]
-        mass = float(split_line[1])
-        vel_x = float(split_line[2])
-        vel_y = float(split_line[3])
-        vel_z = float(split_line[4])
-        pos_x = float(split_line[5])
-        pos_y = float(split_line[6])
-        pos_z = float(split_line[7])
-        vel = np.array([vel_x, vel_y, vel_z])
-        pos = np.array([pos_x, pos_y, pos_z])
-
-        # Return new object
-        return Particle3D(label, mass, pos, vel)
+    def leap_pos1st_list(particle_list, dt):
+        for i in range(particle_list):
+            leap_pos1st(self, dt)
 
     @staticmethod
-    def relative_vector_separation(p1, p2):
+    def leap_pos2nd_list(particle_list, dt, forces):
+        """ 
+        Assume forces[i] is the force on particle_list[i]
         """
-        Calculates the distance between 2 given particles
 
-        :type p1: Particle3D
-        :type p2: Particle3D
+
+
+    @staticmethod
+    def generate_particles(label,position,velocity,mass):
         """
-        return np.linalg.norm(p1.position - p2.position)
+        To create particles to be used in the code
+        """
+        particle = (label,position,velocity,mass)
+        return particle
+        
+        
+    @staticmethod
+    def vector_sep(v1, v2):
+        """
+        Calculate the vector separation between two 3D particles
+        """
+        return (v2 - v1)
+            
+
