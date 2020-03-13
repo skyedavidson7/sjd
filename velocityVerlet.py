@@ -15,6 +15,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as pyplot
 from Particle3D import Particle3D
+from MDUtilities import *
 
 
 def force_lj(v1, v2):
@@ -22,34 +23,36 @@ def force_lj(v1, v2):
     Method to return the force on a particle
     in a Lennard-Jones potential.
     """
-    r_12 = Particle3D.vector_sep(v1, v2)
-    r_12mod = np.linalg.norm(r_12)      """get rid of these dont need"""
-    r_mod = r_12mod/sigma
-    r = r_12/sigma
-    cutoff = input("Cutoff distance is":)
+    r_12 = Particle3D.vector_sep(v1.position, v2.position)
+    r_mod = np.linalg.norm(r_12)      
+
+    cutoff = input("Cutoff distance is: ")
 
     if r_mod > cutoff:
-        force = 0
+        force_lj = 0
 
     else:
-        force_lj = 48*((1/r_mod**14)-(1/(2*r_mod**8)))*r
+        force_lj = 48*((1/r_mod**14)-(1/(2*r_mod**8)))*r_12
 
     
     return force_lj
 
-def forces_list(i, j):
+def forces_list(particle_list):
     """
     Method to create a list for the total forces on each particle
     """
-        forces_list = np.zeros([n,3])
+    n = len(particle_list)
+    forces_list = np.zeros([n,3])
 
-        for i in range(number_particles):               """numberparticles defined in main"""
-            for j in range(i+1,number_particles):
-                force_ij = force_lj([vi],[vj])
-                forces_list[i] += force_ij
-                forces_list[j] -= force_ij
+    for i in range(n):              
+        for j in range(i+1,n):
+            force_ij = force_lj(particle_list[i], particle_list[j])
+            forces_list[i] += force_ij
+            forces_list[j] -= force_ij
 
-def separation_list(particle_list, box_size v1):
+    return forces_list
+"""
+def separation_list(particle_list, box_size, v1):
     "Method to create a list for the particle separations"
     n = len(particle_list)
     sep_vec = np.zeros([n,n,3])
@@ -63,24 +66,15 @@ def separation_list(particle_list, box_size v1):
     sep_mod = np.linalg.norm(sep_vec, axis=2)
     return sep_vec, sep_mod
 
-        separation_list = []
-"""
-        for i in range(N):
-            for j in range(i+1,N):
-                separation_ij = Particle3D.vector_sep([vi],[vj])
-                separation_list[i] = separation_ij
-                """
+    separation_list = []"""
 
-def pot_energy_mp(v1, v2, sigma):
+def pot_energy_lj(v1, v2):
     """
     Method to return potential energy 
     of particle in Lennard-Jones potential
     """
-    r_12 = Particle3D.vector_sep(v1, v2)
-    r_12mod = np.linalg.norm(r_12)                  """no sigma and dont need these functions"""
-    r_mod = r_12mod/sigma
-    r = r_12/sigma
-
+    r_12 = Particle3D.vector_sep(v1.position, v2.position)
+    r_mod = np.linalg.norm(r_12)                
 
     if r_mod > 2.5:
         potential = 0
@@ -90,11 +84,22 @@ def pot_energy_mp(v1, v2, sigma):
 
     return potential
 
+def pot_energy(particle_list):
+    """Method to create a list for potential energy of each particle"""
+    n = len(particle_list)
+    pot_energy = 0.0
+
+    for i in range(particle_list):
+        for j in range(i+1, n):
+            pot_energy += pot_energy_lj(particle_list[i], particle_list[j])
+
+    return pot_energy
+        
 
 # Begin main code
 def main():
   
-    # Read name of output file from command line
+    # Read name of output file from command line            """do we need this"""
     if len(sys.argv)!=3:
         print("Wrong number of arguments.")
         print("Usage: " + sys.argv[0] + " <output file1> <output file2> ")
@@ -107,71 +112,77 @@ def main():
     outfile1 = open(outfile_name1, "w")
     outfile2 = open(outfile_name2, "w")
 
-    #Create four particles
-    p1 = Particle3D.__init__             """need something for position, velocity, mass - x,y,z?"""
-    p2 = Particle3D.__init__
-    p3 = Particle3D.__init__
-    p4 = Particle3D.__init__
-    #Create vectors
-    v1 = p1.position
-    v2 = p2.position
-    v3 = p3.position
-    v4 = p4.position
-
+    
    
     # Set up simulation parameters
     dt = 0.01
     numstep = 2000
     time = 0.0
     temp = 40
-    number_particles = 4
+    rho = 6
+    n = 4
+    energy_list = []            #Initialise energy list
+    energy = 0.0
+    time_list = [time]          #Initialise time list
+    particle_list=[]            #Initialise particle list
   
-    # Write out initial conditions
-    energy = p1.kinetic_energy() + p2.kinetic_energy() + p3.kinetic_energy() + p4.kinetic_energy() + pot_energy_mp(v1, v2, sigma)   "pot energy between 4 particles?"
-    outfile1.write("{0:f} {1:f}\n".format(time,np.linalg.norm(Particle3D.vector_sep(v1, v2))))
-    outfile2.write("{0:f} {1:f}\n".format(time,energy))
-    print(energy)
+    #Create a new particle
+    new_particle = Particle3D(label, position, velocity, mass)
+
+    position = np.zeros(3)
+    velocity = np.zeros(3)
+
+    #initialize a set of P3D objects
+    for i in range (n):
+        new_particle = Particle3D(str(index+1), position, velocity, 1.0)
+        particle_list.append(new_particle)    
+         
+   
+    # Write out initial conditions 
+    #energy = Particle3D.kinetic_energy_list(particle_list) + pot_energy(particle_list)   
+    #energy_list.append(energy)
+    
+    #print("Energy is: " + str(energy))
 
     # Get initial force
-    force = force_lj(v1, v2)
-
-    # Initialise data lists for plotting later
-    time_list = [time]
-    pos_list = [np.linalg.norm(Particle3D.vector_sep(v1, v2))]
-    energy_list = [energy]
+    force = forces_list(particle_list)
 
     # Start the time integration loop
     for i in range(numstep):
-        for j in range(number_particles):
+        for j in range(n):
             # Update particle position
-            p1.leap_pos2nd(dt, force)
-            p2.leap_pos2nd(dt, -1*force)
+            particle_list[j].leap_pos2nd(dt, force[j])
         
             # Update force
-            force_new = force_lj(v1, v2)
+            force_new = forces_list(particle_list)
             # Update particle velocity by averaging
             # current and new forces
-            p1.leap_vel(dt, 0.5*(force+force_new))
-            p2.leap_vel(dt, 0.5*(-1*force-force_new))
-            
+            for j in range(n):
+                particle_list[j].leap_vel(dt, 0.5*(force[j]+force_new[j]))
+           
             # Re-define force value
             force = force_new
 
             # Increase time
             time += dt
+
+            #Output file
+            outfile1.write(str(n)+"\nAfile to read the particle positions\n")
+            for i in particle_list:
+                outfile1.write(str(i)+"\n")
             
             # Output particle information
-            energy = p1.kinetic_energy() + p2.kinetic_energy() + pot_energy_mp(v1, v2)
-            outfile1.write("{0:f} {1:f}\n".format(time,np.linalg.norm(Particle3D.vector_sep(v1, v2))))
-            outfile2.write("{0:f} {1:f}\n".format(time,energy))
-
+            """energy = 0.0
+            energy = Particle3D.kinetic_energy_list(particle_list) + pot_energy(particle_list)
+            energy_list.append(energy)"""
+        
 
             # Append information to data lists
             time_list.append(time)
-            pos_list.append(np.linalg.norm(Particle3D.vector_sep(v1, v2)))
-            energy_list.append(energy)
+            #pos_list.append(np.linalg.norm(Particle3D.vector_sep(v1, v2)))
+            
 
-        print(max(energy_list) - min(energy_list))
+        #print(max(energy_list) - min(energy_list))
 
         # Post-simulation:
         # Close output file
@@ -179,14 +190,14 @@ def main():
         outfile2.close()
 
     # Plot particle trajectory to screen
-    pyplot.title('Velocity Verlet: particle separation vs time')
+    """pyplot.title('Velocity Verlet: particle separation vs time')
     pyplot.xlabel('Time')
     pyplot.ylabel('Particle Separation')
     pyplot.plot(time_list, pos_list)
     pyplot.show()
 
     # Save plot
-    pyplot.savefig('VelocityVerlet_method_particle_separation_vs_time.png')
+    pyplot.savefig('VelocityVerlet_method_particle_separation_vs_time.png')"""
 
     # Plot particle energy to screen
     pyplot.title('Velocity Verlet: total energy vs time')

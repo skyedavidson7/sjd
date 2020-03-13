@@ -37,14 +37,11 @@ class Particle3D(object):
 
     def __str__(self):
         """
-        Define output format.
+        Define output format
         """
-        xyz_str = "{0:8s} {1:12.8f}, {2:12.8f} {3:12.8f}".format(label, self.position[0], self.position[1], self.position[2])
+        xyz_str = "{0:8s} {1:12.8f}, {2:12.8f} {3:12.8f}".format(self.label, self.position[0], self.position[1], self.position[2])
         return xyz_str
-        """return " x-pos =" + str(self.x_pos) + ", y-pos =" + str(self.y_pos) + ", z-pos =" + str(z_pos)
-
-        return  "m = " + str(self.mass)"""
-
+       
     
     def kinetic_energy(self):
         """
@@ -55,12 +52,13 @@ class Particle3D(object):
 
     
     @staticmethod
-    def kinetic_energy_list(particle_list)          """particle_list defined in main of vv"""
+    def kinetic_energy_list(particle_list):       
+    #particle_list defined in main of vv
         ke = 0.0
         for particle in particle_list:
             ke += particle.kinetic_energy()
         return ke
-        
+    
 
     # Time integration methods
     def leap_vel(self, dt, force):
@@ -88,33 +86,42 @@ class Particle3D(object):
 
     
     @staticmethod
-    def leap_vel_list(particle_list, dt, forces):
-        """ 
-        Assume forces[i] is the force on particle_list[i]
-        """
+    def leap_vel_list(particle_list, dt, forces_list):
+        
+    #Assume forces_list[i] is the force on particle_list[i]
+            
+    for i in range(particle_list):
+        leap_vel(self, dt, forces_list[i])
+
 
     @staticmethod
     def leap_pos1st_list(particle_list, dt):
-        for i in range(particle_list):
-            leap_pos1st(self, dt)
+        
+    for i in range(particle_list):
+        leap_pos1st(self, dt)
+
 
     @staticmethod
     def leap_pos2nd_list(particle_list, dt, forces):
-        """ 
-        Assume forces[i] is the force on particle_list[i]
-        """
-
-
-
-    @staticmethod
-    def generate_particles(label,position,velocity,mass):
-        """
-        To create particles to be used in the code
-        """
-        particle = (label,position,velocity,mass)
-        return particle
+     
+    #Assume forces[i] is the force on particle_list[i]
+    
+    for i in range(particle_list):
+        leap_pos2nd(self, dt, forces_list[i])
         
         
+    """@staticmethod
+    def generate_particle(index):
+
+    label = str(index+1)
+    position = np.zeros(3)
+    velocity = np.zeros(3)
+    mass = 1
+    new_particle = Particle3D(label, position, velocity, mass)
+
+    return new_particle"""
+
+    
     @staticmethod
     def vector_sep(v1, v2):
         """
