@@ -5,10 +5,10 @@ CMod Project B: auxiliary MD methods
 import random
 import numpy as np
 
-def set_initial_positions(rho, particles):
+def set_initial_positions(rho, particle_list):
     
     # Determine number of particles
-    natoms = len(particles)
+    natoms = len(particle_list)
     
     # Set box dimensions
     box_size = (natoms/rho)**(1./3.)
@@ -30,19 +30,19 @@ def set_initial_positions(rho, particles):
             for iz in range(ndim):
                 if i_atom<natoms:
                     pos = np.array([ix*delta, iy*delta, iz*delta])
-                    particles[i_atom].position = pos
+                    particle_list[i_atom].position = pos
                     i_atom += 1
                 if i_atom<natoms:
                     pos = np.array([(ix+0.5)*delta, (iy+0.5)*delta, iz*delta])
-                    particles[i_atom].position = pos
+                    particle_list[i_atom].position = pos
                     i_atom += 1
                 if i_atom<natoms:
                     pos = np.array([(ix+0.5)*delta, iy*delta, (iz+0.5)*delta])
-                    particles[i_atom].position = pos
+                    particle_list[i_atom].position = pos
                     i_atom += 1
                 if i_atom<natoms:
                     pos = np.array([ix*delta, (iy+0.5)*delta, (iz+0.5)*delta])
-                    particles[i_atom].position = pos
+                    particle_list[i_atom].position = pos
                     i_atom += 1
     
     # Some output
@@ -52,10 +52,10 @@ def set_initial_positions(rho, particles):
     # Return the box size as Numpy array
     return np.array([box_size, box_size, box_size])
     
-def set_initial_velocities(temp, particles):
+def set_initial_velocities(temp, particle_list):
     
     # Determine number of particles
-    natoms = len(particles)
+    natoms = len(particle_list)
 
     # Zero the accumulators
     xv0 = 0.0
@@ -70,7 +70,7 @@ def set_initial_velocities(temp, particles):
         yvt = random.random() - 0.5
         zvt = random.random() - 0.5
         
-        particles[i].velocity = np.array([xvt, yvt, zvt])
+        particle_list[i].velocity = np.array([xvt, yvt, zvt])
         
         # Add to total velocity
         xv0 += xvt
@@ -94,12 +94,12 @@ def set_initial_velocities(temp, particles):
     
     # Rescale all velocities
     for i in range(natoms):
-        vtemp = particles[i].velocity
+        vtemp = particle_list[i].velocity
         xvt = kB*(vtemp[0] - xv0)
         yvt = kB*(vtemp[1] - yv0)
         zvt = kB*(vtemp[2] - zv0)
         
-        particles[i].velocity = np.array([xvt, yvt, zvt])
+        particle_list[i].velocity = np.array([xvt, yvt, zvt])
         
         xv0_tot += xvt
         yv0_tot += yvt
